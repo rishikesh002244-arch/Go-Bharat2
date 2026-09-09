@@ -1,0 +1,71 @@
+# Implementation Plan: Location-Specific Architecture & Guide Verification
+
+This plan outlines the architecture for making the platform location-specific, adding verified guides, and introducing safety precautions, as requested.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Guide Verification Limitations**: There is no public, open API to instantly verify an Indian Ministry of Tourism Guide License against a live government database without official credentials. 
+> **Proposed Solution**: I will build an automated check (verifying the ID format) along with an **Admin Dashboard** where an admin can review uploaded documents and manually mark a guide as "Verified". Please confirm if this approach is acceptable.
+
+> [!NOTE]
+> **Location Selection UI**: I propose creating a unified Location Page (`/location/[slug]`) where a user selects a city (e.g., Manali) and sees tabs for Places, Hotels, Food, Culture, Guides, and Safety specifically for that location. Is this layout preferred over keeping them on separate pages with a global dropdown filter?
+
+## Proposed Changes
+
+### 1. Location-Specific Filtering & Routing
+To make all content specific to a chosen location, we will introduce a unified location portal.
+
+#### [NEW] `app/location/[slug]/page.tsx`
+- A dynamic page that acts as a hub for a specific city/state (e.g., `/location/manali`).
+- Will fetch and display filtered data for: Places, Hotels, Food, Culture, Guides, and Safety using tabbed navigation or distinct sections.
+
+#### [MODIFY] API Routes (`app/api/places/route.ts`, `app/api/hotels/route.ts`, etc.)
+- Ensure all endpoints accept a `?location=xyz` query parameter to accurately filter the MongoDB queries by `state`, `region`, or `destination`.
+
+---
+
+### 2. Verified Guides Feature
+We will build a comprehensive system for local guides to register and be verified.
+
+#### [NEW] `models/Guide.ts`
+- Mongoose schema to store guide details: `name`, `location`, `languages`, `govtLicenseId`, `isVerified` (boolean), `profileImage`, `bio`, and `contact`.
+
+#### [NEW] `app/guides/register/page.tsx`
+- A registration form for guides to apply, submit their details, and enter their Government ID/License Number.
+
+#### [NEW] `app/api/guides/register/route.ts` & `app/api/guides/route.ts`
+- Endpoints to handle guide creation and fetching verified guides for a specific location.
+
+#### [NEW] `app/admin/guides/page.tsx` (Admin Dashboard)
+- A secure page for admins to view pending guide registrations, verify their Govt IDs, and approve/reject them.
+
+---
+
+### 3. User Details & Profile
+You asked to check if user details are saved in the database. Yes, the `User.ts` model and MongoDB connection already handle this securely during signup (including hashing passwords and generating JWTs). To make this visible to the user:
+
+#### [NEW] `app/profile/page.tsx`
+- A dashboard for logged-in users to view their saved database details (Name, Email, Role) and their saved/generated itineraries.
+
+---
+
+### 4. Safety Precautions Feature
+We will integrate a localized safety advisory system.
+
+#### [NEW] `models/LocationSafety.ts`
+- Mongoose schema storing safety data for specific regions: `location`, `emergencyContacts` (Police, Ambulance, Tourist Helpline), `generalPrecautions`, `healthWarnings`, and `localScamsToAvoid`.
+
+#### [NEW] `components/SafetyWidget.tsx`
+- A UI component displayed on the location page showing vital safety tips, local emergency numbers, and precautions specific to the chosen destination (e.g., altitude sickness warnings for Manali/Leh, or beach safety for Goa).
+
+## Verification Plan
+
+### Automated & Manual Testing
+1. **Location Filtering**: Navigate to `/location/manali` and verify that only Manali-specific places, hotels, and food appear.
+2. **User Profile**: Register a new user, log in, navigate to `/profile`, and verify that the database retrieves the correct user details from MongoDB.
+3. **Guide Flow**:
+   - Register a guide via `/guides/register`.
+   - Log in as an Admin, navigate to `/admin/guides`, and "Verify" the guide.
+   - Verify that the guide now appears on the chosen location's page.
+4. **Safety Precautions**: Verify the safety widget renders localized emergency info correctly based on the URL slug.

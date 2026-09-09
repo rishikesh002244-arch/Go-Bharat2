@@ -1,0 +1,16 @@
+{
+  "name": "Go-Bharat — Smart Tourism",
+  "short_name": "Go-Bharat",
+  "description": "Discover India with AI planning, safer travel, local crafts, and sustainable tourism.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#f97316",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
