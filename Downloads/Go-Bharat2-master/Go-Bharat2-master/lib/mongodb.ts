@@ -34,7 +34,16 @@ export async function connectToDatabase(): Promise<typeof mongoose | null> {
   }
 
   if (cached.conn) {
-    return cached.conn;
+    // readyState: 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting.
+    // A cached connection that died (network blip / Atlas failover) must not be
+    // handed back to callers, or every query fails with
+    // "Client must be connected before running operations".
+    if (mongoose.connection.readyState !== 0) {
+      return cached.conn;
+    }
+    console.warn("[Go-Bharat DB] Cached connection is disconnected; reconnecting...");
+    cached.conn = null;
+    cached.promise = null;
   }
 
   if (!cached.promise) {
